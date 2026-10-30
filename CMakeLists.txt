@@ -6,6 +6,11 @@ project(AstraStudio VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
+if(MSVC)
+    # Sources are UTF-8, and the astraOS sources use M_PI from <cmath>.
+    add_compile_options(/utf-8)
+    add_compile_definitions(_USE_MATH_DEFINES)
+endif()
 
 # A checkout of https://github.com/tsryzenstech/astra: the preview builds
 # astraOS's own components (Astra.Controls, Astra.Animation) from it, and the
