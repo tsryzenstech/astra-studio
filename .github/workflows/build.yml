@@ -1,0 +1,110 @@
+# Builds Astra Studio against the astraOS sources it previews apps with.
+#   windows  AstraStudio-<version>-windows-x64.zip (Qt deployed next to the
+#            program), kept as a workflow artifact and, for v* tags, attached
+#            to a GitHub release.
+#   linux    a build check, so changes to astraOS's components that break
+#            the preview show up on every push.
+# tsryzenstech/astra is checked out with ASTRA_TOKEN when it is set (needed
+# while that repository is private), else with the workflow's own token.
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  QT_VERSION: "6.8.3"
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: astra-studio
+      - uses: actions/checkout@v4
+        with:
+          repository: tsryzenstech/astra
+          path: astra
+          token: ${{ secrets.ASTRA_TOKEN || github.token }}
+          sparse-checkout: |
+            frameworks/animation
+            frameworks/qml/controls
+            sdk
+            tools/apkgtool
+            tools/adu
+            tools/i18n
+            docs
+            prebuilt/fonts
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+          cache: true
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure
+        run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE:PATH=astra
+      - name: Build
+        run: cmake --build build
+      - name: Install
+        run: cmake --install build --prefix dist/AstraStudio
+      - name: Deploy Qt
+        run: >
+          windeployqt --release --no-translations --compiler-runtime
+          --qmldir astra-studio/resources --qmldir astra/frameworks/qml/controls
+          dist/AstraStudio/AstraStudio.exe
+      - name: Package
+        id: pkg
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path astra-studio/CMakeLists.txt -Pattern 'project\(AstraStudio VERSION ([0-9.]+)').Matches[0].Groups[1].Value
+          $name = "AstraStudio-$version-windows-x64"
+          Compress-Archive -Path dist/AstraStudio -DestinationPath "$name.zip"
+          "name=$name" >> $env:GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pkg.outputs.name }}
+          path: ${{ steps.pkg.outputs.name }}.zip
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Astra Studio ${{ github.ref_name }}
+          files: ${{ steps.pkg.outputs.name }}.zip
+
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: astra-studio
+      - uses: actions/checkout@v4
+        with:
+          repository: tsryzenstech/astra
+          path: astra
+          token: ${{ secrets.ASTRA_TOKEN || github.token }}
+          sparse-checkout: |
+            frameworks/animation
+            frameworks/qml/controls
+            sdk
+            tools/apkgtool
+            tools/adu
+            tools/i18n
+            docs
+            prebuilt/fonts
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: linux_gcc_64
+          cache: true
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev libxkbcommon-dev
+      - name: Configure
+        run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE:PATH=astra
+      - name: Build
+        run: cmake --build build
