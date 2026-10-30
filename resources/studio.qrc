@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/studio">
+        <file>PreviewHost.qml</file>
+        <file>astra-studio.svg</file>
+    </qresource>
+</RCC>
