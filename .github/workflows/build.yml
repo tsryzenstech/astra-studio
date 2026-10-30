@@ -49,8 +49,15 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE=astra
+      # Compiler errors also become annotations, readable on the run's page.
       - name: Build
-        run: cmake --build build
+        run: |
+          cmake --build build 2>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) {
+              Select-String -Path build.log -Pattern ': (fatal )?error|FAILED:|error:' |
+                  Select-Object -First 10 | ForEach-Object { "::error::" + $_.Line.Trim() }
+              exit 1
+          }
       - name: Install
         run: cmake --install build --prefix dist/AstraStudio
       - name: Deploy Qt
