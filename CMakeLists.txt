@@ -11,6 +11,9 @@ set(CMAKE_AUTOMOC ON)
 # astraOS's own components (Astra.Controls, Astra.Animation) from it, and the
 # SDK (astra command, templates, design check) ships next to the program.
 set(ASTRA_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../astra" CACHE PATH "astraOS source tree")
+# A relative -DASTRA_SOURCE is relative to this directory; sources and globs
+# below need it absolute.
+file(REAL_PATH "${ASTRA_SOURCE}" ASTRA_SOURCE BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 if(NOT EXISTS "${ASTRA_SOURCE}/frameworks/qml/controls/Theme.qml")
     message(FATAL_ERROR "ASTRA_SOURCE (${ASTRA_SOURCE}) is not an astraOS checkout")
 endif()

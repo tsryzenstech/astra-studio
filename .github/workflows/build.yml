@@ -4,7 +4,7 @@
 #            to a GitHub release.
 #   linux    a build check, so changes to astraOS's components that break
 #            the preview show up on every push.
-# tsryzenstech/astra is checked out with ASTRA_TOKEN when it is set (needed
+# tsryzenstech/astra is checked out with ASTRA_REPO_TOKEN when it is set (needed
 # while that repository is private), else with the workflow's own token.
 name: build
 on:
@@ -31,7 +31,7 @@ jobs:
         with:
           repository: tsryzenstech/astra
           path: astra
-          token: ${{ secrets.ASTRA_TOKEN || github.token }}
+          token: ${{ secrets.ASTRA_REPO_TOKEN || github.token }}
           sparse-checkout: |
             frameworks/animation
             frameworks/qml/controls
@@ -48,7 +48,7 @@ jobs:
           cache: true
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
-        run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE:PATH=astra
+        run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE=astra
       - name: Build
         run: cmake --build build
       - name: Install
@@ -87,7 +87,7 @@ jobs:
         with:
           repository: tsryzenstech/astra
           path: astra
-          token: ${{ secrets.ASTRA_TOKEN || github.token }}
+          token: ${{ secrets.ASTRA_REPO_TOKEN || github.token }}
           sparse-checkout: |
             frameworks/animation
             frameworks/qml/controls
@@ -103,8 +103,8 @@ jobs:
           arch: linux_gcc_64
           cache: true
       - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev libxkbcommon-dev
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev libegl-dev libopengl-dev libxkbcommon-dev
       - name: Configure
-        run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE:PATH=astra
+        run: cmake -S astra-studio -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DASTRA_SOURCE=astra
       - name: Build
         run: cmake --build build

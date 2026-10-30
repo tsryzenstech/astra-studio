@@ -49,7 +49,7 @@ developing, `ASTRA_SDK=<astra>/sdk` makes Studio use the checkout's SDK.
 
 `.github/workflows/build.yml` builds the Windows zip and checks the Linux
 build on every push. While `tsryzenstech/astra` is private, add a repository
-secret `ASTRA_TOKEN` (a token that can read it) so CI can check it out.
+secret `ASTRA_REPO_TOKEN` (a token that can read it) so CI can check it out.
 
 ## Layout
 
